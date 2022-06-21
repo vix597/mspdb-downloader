@@ -140,7 +140,8 @@ def main():
             except requests.exceptions.HTTPError as exc:
                 print(f"Failed to get {url}. {exc}", file=sys.stderr)
         else:
-            curl_cmd = f"curl -L {url}"
+            outfile = to_pdb(filename)
+            curl_cmd = f"curl -L {url} -o ./{outfile}"
             print(curl_cmd)
 
 
