@@ -1,17 +1,19 @@
-# pdb-downloader
+# mspdb-downloader
 
-Download PDB files from microsoft symbol servers
+Download PDB files from microsoft symbol servers or generate a list a curl commands
+to perform the symbol download.
 
 # Usage
 
-Download PDB for multiple exe files
+```shell
+$ python -m mspdb-downloader -h
+usage: __main__.py [-h] --path PATH [--recursive] [--dest DEST]
 
-```bash
-> ./main.py /tmp/notepad.exe
-Saving http://msdl.microsoft.com/download/symbols/notepad.pdb/A976171302F1449EA6B676E127B7434D2/notepad.pdb to /tmp/notepad.pdb
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-100  203k  100  203k    0     0  63323      0  0:00:03  0:00:03 --:--:--  109k
+Download Microsoft PDB files
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --path PATH  Directory or file to get PDBs for
+  --recursive  If path is a directory, walk it recurssively
+  --dest DEST  Destination directory to store downloaded PDBs (optional).
 ```
-
