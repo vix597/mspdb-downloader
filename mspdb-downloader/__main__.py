@@ -47,10 +47,13 @@ def download_file(url: str, dest: str) -> None:
 
 def build_url(filename):
     """Build the URL to download the PDB"""
-    pdb_ident = ""
+    pdb_ident = None
     pdb = to_pdb(filename)
     pe = pefile.PE(filename, fast_load=True)
     pe.parse_data_directories(directories=[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DEBUG']])
+
+    if not hasattr(pe, "DIRECTORY_ENTRY_DEBUG"):
+        return None
 
     for dbg in pe.DIRECTORY_ENTRY_DEBUG:
         # IMAGE_DEBUG_TYPE_CODEVIEW
@@ -63,6 +66,9 @@ def build_url(filename):
                 dbg.entry.Age
             )
             break
+
+    if not pdb_ident:
+        return None
 
     return f"http://msdl.microsoft.com/download/symbols/{pdb}/{pdb_ident}/{pdb}"
 
@@ -78,9 +84,10 @@ def main():
     if args.dest and not os.path.exists(args.dest):
         os.mkdir(args.dest)
     elif args.dest and os.path.exists(args.dest) and not os.path.isdir(args.dest):
-        print("--dest must be a new or existing directory.")
+        print("--dest must be a new or existing directory.", file=sys.stderr)
         sys.exit(1)
 
+    print("Generating list of paths to process...", file=sys.stderr)
     process_paths = []
     for path in args.path:
         if not os.path.exists(path):
@@ -92,8 +99,12 @@ def main():
             continue
 
         if os.path.isdir(path) and args.recursive:
+            count = 0
             for root, _, files in os.walk(path):
                 for fname in files:
+                    count += 1
+                    if count % 10000 == 0:
+                        print(f"Still processing (processed: {count}. pe-files found: {len(process_paths)})...", file=sys.stderr)
                     fpath = os.path.join(root, fname)
                     if not is_pe(fpath):
                         continue
@@ -107,11 +118,16 @@ def main():
             process_paths.append(fpath)
 
     if not process_paths:
-        print("No files to process")
+        print("No files to process", file=sys.stderr)
         sys.exit(1)
+
+    print(f"Processing {len(process_paths)} paths.", file=sys.stderr)
 
     for path in process_paths:
         url = build_url(path)
+        if not url:
+            continue
+
         filename = os.path.basename(path)
         dest = None
         if args.dest:
@@ -122,7 +138,7 @@ def main():
             try:
                 download_file(url, dest)
             except requests.exceptions.HTTPError as exc:
-                print(f"Failed to get {url}. {exc}")
+                print(f"Failed to get {url}. {exc}", file=sys.stderr)
         else:
             curl_cmd = f"curl -L {url} -o {dest}"
             print(curl_cmd)
