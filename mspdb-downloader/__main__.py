@@ -140,7 +140,7 @@ def main():
             except requests.exceptions.HTTPError as exc:
                 print(f"Failed to get {url}. {exc}", file=sys.stderr)
         else:
-            curl_cmd = f"curl -L {url} -o {dest}"
+            curl_cmd = f"curl -L {url}"
             print(curl_cmd)
 
 
